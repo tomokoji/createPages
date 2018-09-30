@@ -1,6 +1,6 @@
-=================================
+===
 createPages
-=================================
+===
 
 # Description
   This script is to create a new Pages file on Mac.
