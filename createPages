@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# *************************************************************************
+#                            c r e a t e P a g e s
+# -------------------------------------------------------------------------
+# This script is to create a new Pages file on Mac.
+#
+# Author: tomokoji
+# Created on: 30 Sep 2018
+# *************************************************************************
+
+# -------------------------------------------------------------------------
+# Define variables.
+# COLOR CODE
+#   30: Black   31: Red     32: Green   33: Yellow  34: Blue
+#   35: Magenta 36: Cyan    37: White
+# -------------------------------------------------------------------------
+myCOLOR="34m"
+
+COLOR="\033[${myCOLOR}"
+BOLD="\033[1;${myCOLOR}"
+NONBOLD="\033[0;${myCOLOR}"
+DEFAULT="\033[0m"
+
+bar=\
+"-------------------------------------------------------------------------"
+echo -e "${COLOR}${bar}"
+escape="echo -e \"\${bar}\${DEFAULT}\"; exit"
+
+# -------------------------------------------------------------------------
+# Check the arguments.
+# -------------------------------------------------------------------------
+flag=0
+
+if [[ ${1} != "" ]] ; then
+	file_path=$1
+    flag=1
+fi
+
+if [[ ${2} != "" ]] ; then
+	file_name=$2
+	flag=`expr $flag + 1`
+fi
+
+if [[ ${flag} != 2 ]]; then
+    echo -n "[WARNING] This command requires 2 arguments but $flag of "
+    echo "them were given:"
+    echo "   $ ${0##*/} <file_path> <file_name>"
+    echo ""
+    echo -n "   * file_path should be relative and end with '/' "
+    echo "(e.g. Users/Hoge/)."
+    echo "   * file_name should NOT include an extention '.pages'."
+    eval ${escape}
+fi
+
+# -------------------------------------------------------------------------
+# Check the format of the path and convert the relative path to an
+# absolute path.
+# -------------------------------------------------------------------------
+if [[ ${file_path:0:1} = "/" ]]; then
+    cdr=`pwd`
+else
+    cdr=`pwd`/
+fi
+
+file_path=${cdr}${file_path%*/}/
+
+# -------------------------------------------------------------------------
+# Check if the specified directory exists.
+# -------------------------------------------------------------------------
+if [ ! -e ${file_path} ]; then
+    echo "[WARNING] A directory ${file_path} does not exist."
+    eval ${escape}
+fi
+
+# -------------------------------------------------------------------------
+# Check if a file with the same name already exists.
+# -------------------------------------------------------------------------
+if [ -e ${file_path}${file_name}.pages ]; then
+    echo "[WARNING] ${file_path}${file_name}.pages already exists."
+    eval ${escape}
+fi
+
+# -------------------------------------------------------------------------
+# Final confirmation to create a file.
+# -------------------------------------------------------------------------
+echo -ne ">>> A new file <${file_name}.pages> will be "
+echo -e "created under the directory <${file_path}>."
+read -p ">>> Enter y/Y [OK] or n/N [Cancel]: " VAR
+
+if [[ ${VAR} != "y" ]] && [[ ${VAR} != "Y" ]] ; then
+    eval ${escape}
+fi
+
+# -------------------------------------------------------------------------
+# Create a new Pages file.
+# -------------------------------------------------------------------------
+file_path=${file_path////:} # Replace / with :.
+
+osascript -e \
+'tell application "Pages" to save (make new document) in file '\
+'"Macintosh HD'${file_path}${file_name}'.pages"'
+
+echo "[ O  K ] ${file_name}.pages is created."
+
+eval ${escape}
+
+# *************************************************************************
+# ACKNOWLEDGEMENT
+# -------------------------------------------------------------------------
+# This script was written in reference to the followings:
+# [1] "Create and write to a .pages file using Terminal", StackExchange
+#     https://apple.stackexchange.com/questions/327094/create-and-write-to-a-pages-file-using-terminal
+# *************************************************************************
